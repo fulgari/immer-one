@@ -5,13 +5,18 @@ const baseObj = createBaseState();
 const imo = new ImmerOne();
 
 const changedObj = imo.produce(baseObj, (draft) => {
-    console.log("draft -> ", draft)
+    // console.log("[debug] draft before -> ", draft)
     draft.anObject.total += 1;
     delete draft.anObject.extra;
     draft.anObject.nested.yummie = false;
+    draft.anArray.push("Johnny");
+    draft.aSet.add("github");
+    draft.aMap.set("force", "of no use");
+    draft.anInstance.name = "Nameless";
 });
 
-console.log("[debug]", imo, baseObj, changedObj);
+console.log("[debug] base object: ", baseObj);
+console.log("[debug] changed object: ", changedObj);
 
 
 

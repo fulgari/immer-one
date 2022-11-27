@@ -26,9 +26,13 @@ function produceProxy(base, recipe) {
     try {
         // create proxy for root
         const rootProxy = createProxy(undefined, base);
+        console.log("[debug] draft before -> ", rootProxy)
+
         // 将 callback 进行调用 （其中所有对 base 内容执行的部份将会被 proxy 的 traps 处理）
         recipe.call(rootProxy, rootProxy); // expected no return values
         const res = finalize(rootProxy);
+        console.log("[debug] draft after -> ", rootProxy)
+
         // revoke all proxies
         each(proxies, (_, p) => p.revoke());
         return res;
@@ -67,11 +71,10 @@ function createState(parent, base) {
 function finalize(base) {
     if (isProxy(base)) {
         const state = base[PROXY_STATE];
-        console.log("{{{{state}}}}", state, base, PROXY_STATE)
         if (state.modified === true) {
-            return state.finalized 
-            ? state.copy 
-            : (state.finalized = true, finalizeObject(state.copy, state))
+            return state.finalized
+                ? state.copy
+                : (state.finalized = true, finalizeObject(state.copy, state))
         } else {
             return state.base;
         }
@@ -83,16 +86,16 @@ function finalize(base) {
 function finalizeObject(copy, state) {
     const base = state.base;
     each(copy, (prop, value) => {
-        if(value !== base[prop]) copy[prop] = finalize(value);
+        if (value !== base[prop]) copy[prop] = finalize(value);
     });
     return copy;
 }
 
 function finalizeNonProxiedObject(parent) {
-    if(!isProxyable(parent)) return
-    if(Object.isFrozen(parent)) return
+    if (!isProxyable(parent)) return
+    if (Object.isFrozen(parent)) return
     each(parent, (i, child) => {
-        if(isProxy(child)) {
+        if (isProxy(child)) {
             parent[i] = finalize(child);
         } else {
             finalizeNonProxiedObject(child);
@@ -109,7 +112,7 @@ function isProxyable(state) {
  * 判断某个对象是否已经被使用 createProxy 来初始化了
  * @param {*} value 
  */
- function isProxy(value) {
+function isProxy(value) {
     return !!value && !!value[PROXY_STATE]; // 如果被初始化了，get trap 调用 value[PROXY_STATE] 会返回 state 的
 }
 
